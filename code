@@ -1,0 +1,106 @@
+ThisWorkbook[code]
+
+Private Sub Workbook_activate()
+  Call openwb
+End Sub
+
+Private Sub Workbook_BeforeClose(Cancel As Boolean)
+  Call closewb
+End Sub
+
+Module1[code]
+
+Option Explicit
+Global i As Boolean
+Public Sub openwb()
+  Dim ws As Sheets
+    If i = False Then
+    i = True
+    Set ws = ThisWorkbook.Worksheets
+    Application.EnableEvents = True
+    ws(2).Visible = xlSheetVisible 'ws 2 is only visible so i can switch to it and then back to ws 1, thus triggering workbook_activate event in ws 1 
+    ws(1).Visible = xlSheetVisible
+    ws(2).Activate
+    ws(1).range("u23") = 1
+    ws(1).Activate
+  End If
+End Sub
+
+Public Sub closewb()
+  i = False
+End Sub
+
+Sheet1[code]
+
+Private Sub Worksheet_Activate()
+Dim ws As Sheets
+Dim box As ShapeRange
+Dim Msheet As Excel.Worksheet
+Dim i As Integer
+Dim t As Variant
+Dim tnow As Integer
+Dim text As range
+Set box = ActiveSheet.Shapes.range(Array("Rectangle 2"))
+Set ws = ThisWorkbook.Worksheets
+Set text = range("H11")
+
+range("a1:u23").Interior.Color = &H8ED0A9
+range("a1").Select
+    If range("u23") > 0 Then
+    Application.EnableEvents = True
+      For Each Msheet In Worksheets
+        If Msheet.Name = "opening" Then GoTo Nextiteration
+        Msheet.Visible = xlSheetVeryHidden 'here, all workbooks (including ws2, excluding ws1) will be hidden from the user
+Nextiteration:
+       Next Msheet
+    End If
+Do
+  If ActiveSheet Is ThisWorkbook.Worksheets(1) Then 'if this workbook is selected, flicker "text" cell color
+    t = Timer
+    With text
+      .Interior.Color = &H77C797
+      With .Font
+        .Underline = True
+        .Color = vbWhite
+        .Bold = True
+      End With
+    End With
+    With box.TextFrame2.TextRange.Font.Fill
+      .Visible = msoTrue
+      .ForeColor.RGB = RGB(255, 0, 0)
+      .Transparency = 0
+      .Solid
+    End With
+    With box.TextFrame2.TextRange.Font.Line
+      .Visible = msoTrue
+      .ForeColor.RGB = RGB(0, 0, 0)
+      .Transparency = 0
+    End With
+    Do While Timer < t + 1
+      DoEvents
+    Loop
+    t = Timer
+    With text
+      .Interior.Color = &H8ED0A9
+      With .Font
+        .Underline = False
+        .Color = &H0
+        .Bold = False
+      End With
+    End With
+    With box.TextFrame2.TextRange.Font.Fill
+      .Visible = msoTrue
+      .ForeColor.RGB = RGB(0, 0, 0)
+      .Transparency = 0
+      .Solid
+    End With
+    box.TextFrame2.TextRange.Font.Line.Transparency = 1
+    Do While Timer < t + 1
+      DoEvents
+    Loop
+  Else
+      Exit Sub
+  End If
+Loop
+
+End Sub
